@@ -1,5 +1,6 @@
 const { ObjectId } = require('mongodb');
 const Users = require('../models/users');
+const Schema = require('../middlewares/validate');
 
 const getAll = async () => {
 	const users = await Users.getAll();
@@ -19,8 +20,11 @@ const create = async (data) => {
 	const checked = await Users.getByEmail(data.email);
 	if (checked) return { status: 400, err: { message: 'Email já cadastrado' } };
 
-	const user = Users.create(data);
-	return { status: 201, data: user };
+	const validate = Schema.User.validate(data);
+	if (validate.error) return { status: 400, err: { message: 'Invalid entries' } };
+
+	const user = await Users.create(data);
+	return { status: 200, data: user };
 };
 
 const remove = async (id) => {
